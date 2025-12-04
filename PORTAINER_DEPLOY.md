@@ -1,40 +1,54 @@
-# Portainer Deployment Guide
+# Quick Portainer Deployment Fix
 
-## Quick Deploy to Portainer
+## The Problem
+Portainer can't build from GitHub due to BuildKit communication errors.
 
-### Method 1: Using Portainer Stacks (Recommended)
+## The Solution
+Use GitHub Actions to automatically build the Docker image, then have Portainer pull the pre-built image.
 
-1. **In Portainer**, navigate to:
-   - **Stacks** → **Add Stack**
+## Steps to Deploy
 
-2. **Configure the stack**:
-   - **Name**: `freezer-manager`
-   - **Build method**: Select **Repository**
-   - **Repository URL**: `https://github.com/charles-trotman/freezer-manager`
-   - **Repository reference**: `refs/heads/main`
-   - **Compose path**: `docker-compose.yml`
-   - **Authentication**: Leave blank (public repo)
+### 1. Push Changes to GitHub
 
-3. **Advanced settings** (optional):
-   - If you want to change the port, scroll down to **Environment variables** and add:
-     - Name: `PORT`
-     - Value: `8080` (or your preferred port)
+```bash
+git add .
+git commit -m "Add GitHub Actions for Docker builds"
+git push
+```
 
-4. **Deploy**:
-   - Click **Deploy the stack**
-   - Wait for the build to complete (this may take a few minutes)
+### 2. Wait for GitHub Actions to Build
 
-5. **Access your app**:
-   - Open `http://YOUR_SERVER_IP:8080`
+- Go to your repo: https://github.com/charles-trotman/freezer-manager
+- Click on **Actions** tab
+- Wait for the "Build and Push Docker Image" workflow to complete (2-3 minutes)
+- The image will be published to `ghcr.io/charles-trotman/freezer-manager:latest`
 
-### Method 2: Using Web Editor
+### 3. Make the Image Public (One-time setup)
 
-If the repository method fails, use the web editor:
+- Go to https://github.com/charles-trotman?tab=packages
+- Click on **freezer-manager** package
+- Click **Package settings** (right side)
+- Scroll down to **Danger Zone**
+- Click **Change visibility** → **Public**
+- Confirm
 
-1. **In Portainer**: **Stacks** → **Add Stack**
-2. **Name**: `freezer-manager`
-3. **Build method**: **Web editor**
-4. **Paste this**:
+### 4. Deploy in Portainer
+
+**Option A: Using Stacks (Recommended)**
+
+1. In Portainer: **Stacks** → **Add Stack**
+2. Name: `freezer-manager`
+3. Build method: **Repository**
+4. Repository URL: `https://github.com/charles-trotman/freezer-manager`
+5. Compose path: `docker-compose.yml`
+6. Click **Deploy the stack**
+
+**Option B: Using Web Editor**
+
+1. In Portainer: **Stacks** → **Add Stack**
+2. Name: `freezer-manager`
+3. Build method: **Web editor**
+4. Paste this:
 
 ```yaml
 version: '3.8'
@@ -50,6 +64,7 @@ services:
     environment:
       - NODE_ENV=production
     restart: unless-stopped
+    pull_policy: always
 
 volumes:
   freezer-data:
@@ -58,57 +73,35 @@ volumes:
 
 5. Click **Deploy the stack**
 
-> **Note**: For Method 2, you'll need to build and push the image to GitHub Container Registry first (see below).
+### 5. Access Your App
+
+Open: `http://YOUR_SERVER_IP:8080`
+
+## How It Works
+
+1. **GitHub Actions** automatically builds the Docker image when you push to `main`
+2. The image is pushed to **GitHub Container Registry** (ghcr.io)
+3. **Portainer** pulls the pre-built image (no building required!)
+4. Your app runs in a container
+
+## Updating the App
+
+1. Make changes to your code
+2. Push to GitHub: `git push`
+3. GitHub Actions automatically builds a new image
+4. In Portainer, go to your stack and click **Pull and redeploy**
 
 ## Troubleshooting
 
-### If you get BuildKit errors:
+**If the image pull fails:**
+- Make sure you made the package public (Step 3)
+- Check that GitHub Actions completed successfully
 
-1. **Disable BuildKit** in Portainer:
-   - Go to **Environments** → Select your environment
-   - Scroll to **Features configuration**
-   - Toggle OFF: "Use BuildKit to build images"
-   - Save changes
+**If you want to use a private image:**
+- In Portainer, go to **Registries** → **Add Registry**
+- Type: **Custom Registry**
+- Registry URL: `ghcr.io`
+- Username: `charles-trotman`
+- Password: Your GitHub Personal Access Token (with `read:packages` permission)
 
-2. **Try deploying again**
-
-### Alternative: Build and Push to GitHub Container Registry
-
-If Portainer still has issues building from source:
-
-```bash
-# On your local machine or server with Docker
-docker build -t ghcr.io/charles-trotman/freezer-manager:latest .
-docker login ghcr.io -u charles-trotman
-docker push ghcr.io/charles-trotman/freezer-manager:latest
-```
-
-Then use Method 2 above with the pre-built image.
-
-## Managing Your Deployment
-
-### View Logs
-In Portainer:
-- Go to **Containers** → Click on `freezer-manager`
-- Click **Logs** to see application output
-
-### Update the Application
-1. Push changes to GitHub
-2. In Portainer, go to your stack
-3. Click **Pull and redeploy**
-
-### Backup Data
-Your data is stored in the `freezer-data` volume. To backup:
-
-```bash
-docker run --rm -v freezer-manager_freezer-data:/data -v $(pwd):/backup alpine tar czf /backup/freezer-data-backup.tar.gz -C /data .
-```
-
-### Change Port
-Edit the stack and change `"8080:80"` to `"YOUR_PORT:80"`
-
-## Default Configuration
-
-- **Port**: 8080 (external) → 80 (internal)
-- **Data Volume**: `freezer-data` (persists across restarts)
-- **Restart Policy**: `unless-stopped` (auto-restart on failure)
+That's it! No more BuildKit errors! 🎉

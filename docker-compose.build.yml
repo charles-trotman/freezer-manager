@@ -1,9 +1,10 @@
+# For local development/testing with docker-compose build
 version: '3.8'
 
 services:
   freezer-manager:
     container_name: freezer-manager
-    image: ghcr.io/charles-trotman/freezer-manager:latest
+    build: .
     ports:
       - "8080:80"
     volumes:
@@ -11,7 +12,6 @@ services:
     environment:
       - NODE_ENV=production
     restart: unless-stopped
-    pull_policy: always
 
 volumes:
   freezer-data:
