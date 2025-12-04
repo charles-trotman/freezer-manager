@@ -7,7 +7,10 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+
+# Build both frontend and backend
 RUN npm run build
+RUN npm run build:server
 
 # Stage 2: Production stage
 FROM node:20-alpine
