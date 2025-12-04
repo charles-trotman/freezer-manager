@@ -1,36 +1,17 @@
 version: '3.8'
 
 services:
-  backend:
-    container_name: freezer-manager-backend
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
+  freezer-manager:
+    container_name: freezer-manager
+    build: .
+    ports:
+      - "8080:80"
     volumes:
       - freezer-data:/app/data
     environment:
       - NODE_ENV=production
     restart: unless-stopped
-    networks:
-      - freezer-network
-
-  frontend:
-    container_name: freezer-manager-frontend
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    ports:
-      - "8080:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-    networks:
-      - freezer-network
 
 volumes:
   freezer-data:
     driver: local
-
-networks:
-  freezer-network:
-    driver: bridge
