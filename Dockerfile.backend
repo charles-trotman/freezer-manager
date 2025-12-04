@@ -1,0 +1,27 @@
+# Backend Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy server source and types
+COPY server ./server
+COPY src/types.ts ./src/types.ts
+COPY tsconfig.server.json ./
+
+# Install tsx for running TypeScript directly
+RUN npm install -g tsx
+
+# Create data directory
+RUN mkdir -p /app/data
+
+EXPOSE 3001
+
+ENV NODE_ENV=production
+
+CMD ["tsx", "server/server.ts"]

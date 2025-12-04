@@ -72,6 +72,95 @@ Build the backend:
 npm run build:server
 ```
 
+## Docker Deployment
+
+### Using Docker Compose (Recommended for Portainer)
+
+1. **Deploy via Portainer**:
+   - Go to Portainer → Stacks → Add Stack
+   - Name: `freezer-manager`
+   - Build method: Repository
+   - Repository URL: `https://github.com/YOUR_USERNAME/freezer-manager`
+   - Compose path: `docker-compose.yml`
+   - Click "Deploy the stack"
+
+2. **Or deploy via command line**:
+```bash
+docker-compose up -d
+```
+
+The application will be available at `http://YOUR_SERVER_IP:8080`
+
+### Manual Docker Build
+
+Build and run individual services:
+
+```bash
+# Build backend
+docker build -f Dockerfile.backend -t freezer-manager-backend .
+
+# Build frontend
+docker build -f Dockerfile.frontend -t freezer-manager-frontend .
+
+# Run with docker-compose
+docker-compose up -d
+```
+
+### Portainer Stack Configuration
+
+When deploying in Portainer, you can customize the port by adding environment variables in the stack editor:
+
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    container_name: freezer-manager-backend
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    volumes:
+      - freezer-data:/app/data
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - freezer-network
+
+  frontend:
+    container_name: freezer-manager-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8080:80"  # Change 8080 to your preferred port
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - freezer-network
+
+volumes:
+  freezer-data:
+    driver: local
+
+networks:
+  freezer-network:
+    driver: bridge
+```
+
+### Data Persistence
+
+The `freezer-data` volume persists your JSON data across container restarts. To backup your data:
+
+```bash
+# Find the volume location
+docker volume inspect freezer-manager_freezer-data
+
+# Or copy data from container
+docker cp freezer-manager-backend:/app/data/freezer-items.json ./backup.json
+```
+
 ## Project Structure
 
 ```
@@ -86,6 +175,10 @@ freezer-manager/
 │   └── App.tsx         # Main application component
 ├── data/               # JSON data storage (gitignored)
 │   └── freezer-items.json
+├── Dockerfile.backend  # Backend Docker image
+├── Dockerfile.frontend # Frontend Docker image
+├── docker-compose.yml  # Docker Compose configuration
+├── nginx.conf          # Nginx configuration for frontend
 └── package.json
 ```
 

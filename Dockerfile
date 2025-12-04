@@ -1,22 +1,45 @@
-# Stage 1: Build the application
+# Multi-stage build for production deployment
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Copy package files
 COPY package.json package-lock.json ./
+
+# Install dependencies
 RUN npm ci
 
+# Copy source code
 COPY . .
+
+# Build both frontend and backend
 RUN npm run build
+RUN npm run build:server
 
-# Stage 2: Serve the application with Nginx
-FROM nginx:alpine
+# Production stage
+FROM node:20-alpine
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-# Optional: Copy custom nginx config if needed, but default works for simple SPA
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy package files for production dependencies
+COPY package.json package-lock.json ./
 
-EXPOSE 80
+# Install only production dependencies
+RUN npm ci --only=production
 
-CMD ["nginx", "-g", "daemon off;"]
+# Copy built files from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist/server ./dist/server
+COPY --from=builder /app/server ./server
+
+# Create data directory for JSON storage
+RUN mkdir -p /app/data
+
+# Expose ports
+EXPOSE 3001 5173
+
+# Set environment to production
+ENV NODE_ENV=production
+
+# Start the application (backend server and serve frontend)
+CMD ["node", "dist/server/server.js"]
