@@ -52,7 +52,7 @@ RUN echo '[supervisord]' > /etc/supervisor.d/supervisord.ini && \
     echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor.d/supervisord.ini && \
     echo '' >> /etc/supervisor.d/supervisord.ini && \
     echo '[program:backend]' >> /etc/supervisor.d/supervisord.ini && \
-    echo 'command=node dist/server/server.js' >> /etc/supervisor.d/supervisord.ini && \
+    echo 'command=node dist/server/server/server.js' >> /etc/supervisor.d/supervisord.ini && \
     echo 'directory=/app' >> /etc/supervisor.d/supervisord.ini && \
     echo 'autostart=true' >> /etc/supervisor.d/supervisord.ini && \
     echo 'autorestart=true' >> /etc/supervisor.d/supervisord.ini && \
