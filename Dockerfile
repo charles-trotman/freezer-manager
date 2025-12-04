@@ -9,7 +9,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Stage 2: Production
+# Stage 2: Production stage
 FROM node:20-alpine
 
 WORKDIR /app
@@ -21,13 +21,8 @@ RUN apk add --no-cache nginx supervisor
 COPY package.json package-lock.json ./
 RUN npm ci --only=production
 
-# Install tsx globally to avoid npx permission issues
-RUN npm install -g tsx
-
-# Copy server files
-COPY server ./server
-COPY src/types.ts ./src/types.ts
-COPY tsconfig.server.json ./
+# Copy compiled backend from builder
+COPY --from=frontend-builder /app/dist/server ./dist/server
 
 # Copy built frontend from builder stage
 COPY --from=frontend-builder /app/dist /usr/share/nginx/html
@@ -54,7 +49,7 @@ RUN echo '[supervisord]' > /etc/supervisor.d/supervisord.ini && \
     echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor.d/supervisord.ini && \
     echo '' >> /etc/supervisor.d/supervisord.ini && \
     echo '[program:backend]' >> /etc/supervisor.d/supervisord.ini && \
-    echo 'command=/usr/local/bin/tsx server/server.ts' >> /etc/supervisor.d/supervisord.ini && \
+    echo 'command=node dist/server/server.js' >> /etc/supervisor.d/supervisord.ini && \
     echo 'directory=/app' >> /etc/supervisor.d/supervisord.ini && \
     echo 'autostart=true' >> /etc/supervisor.d/supervisord.ini && \
     echo 'autorestart=true' >> /etc/supervisor.d/supervisord.ini && \
