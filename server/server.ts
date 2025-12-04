@@ -1,11 +1,16 @@
 import express from 'express';
 import cors from 'cors';
 import { randomUUID } from 'crypto';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { readItems, addItem, updateItem, deleteItem } from './storage.js';
 import type { FreezerItem, NewFreezerItem } from '../src/types.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 80;
 
 // Middleware
 app.use(cors());
@@ -80,6 +85,19 @@ app.delete('/api/items/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to delete item' });
     }
 });
+
+// Serve static frontend files in production
+if (process.env.NODE_ENV === 'production') {
+    // When compiled, this file is at dist/server/server/server.js
+    // Frontend files are at dist/ (root of dist folder)
+    const frontendPath = path.join(__dirname, '../../');
+    app.use(express.static(frontendPath));
+
+    // Catch-all route for SPA - must be after API routes
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(frontendPath, 'index.html'));
+    });
+}
 
 // Start server
 app.listen(PORT, () => {
