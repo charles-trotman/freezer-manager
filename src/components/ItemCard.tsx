@@ -7,8 +7,8 @@ interface ItemCardProps {
 }
 
 export function ItemCard({ item, onEdit, onDelete }: ItemCardProps) {
-    const isExpired = new Date(item.useByDate) < new Date();
-    const isExpiringSoon = !isExpired && new Date(item.useByDate) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const isExpired = item.useByDate ? new Date(item.useByDate) < new Date() : false;
+    const isExpiringSoon = !isExpired && item.useByDate ? new Date(item.useByDate) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : false;
 
     return (
         <div className="card" style={{
@@ -42,13 +42,21 @@ export function ItemCard({ item, onEdit, onDelete }: ItemCardProps) {
                     <div style={{ color: 'var(--color-text-muted)' }}>Frozen On</div>
                     <div>{new Date(item.frozenDate).toLocaleDateString()}</div>
                 </div>
+
+                {item.originalExpiryDate && (
+                    <div>
+                        <div style={{ color: 'var(--color-text-muted)' }}>Original Expiry</div>
+                        <div>{new Date(item.originalExpiryDate).toLocaleDateString()}</div>
+                    </div>
+                )}
+
                 <div>
                     <div style={{ color: 'var(--color-text-muted)' }}>Use By</div>
                     <div style={{
                         color: isExpired ? 'var(--color-danger)' : isExpiringSoon ? 'var(--color-warning)' : 'inherit',
                         fontWeight: isExpired || isExpiringSoon ? 'bold' : 'normal'
                     }}>
-                        {new Date(item.useByDate).toLocaleDateString()}
+                        {item.useByDate ? new Date(item.useByDate).toLocaleDateString() : '-'}
                     </div>
                 </div>
             </div>

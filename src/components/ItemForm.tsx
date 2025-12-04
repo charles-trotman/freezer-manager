@@ -14,6 +14,7 @@ export function ItemForm({ initialData, onSubmit, onCancel }: ItemFormProps) {
         name: '',
         category: 'Other',
         frozenDate: new Date().toISOString().split('T')[0],
+        originalExpiryDate: '',
         useByDate: '',
         notes: ''
     });
@@ -24,6 +25,7 @@ export function ItemForm({ initialData, onSubmit, onCancel }: ItemFormProps) {
                 name: initialData.name,
                 category: initialData.category,
                 frozenDate: initialData.frozenDate,
+                originalExpiryDate: initialData.originalExpiryDate || '',
                 useByDate: initialData.useByDate,
                 notes: initialData.notes || ''
             });
@@ -73,6 +75,14 @@ export function ItemForm({ initialData, onSubmit, onCancel }: ItemFormProps) {
                                 required
                                 value={formData.frozenDate}
                                 onChange={e => setFormData({ ...formData, frozenDate: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Original Expiry (Opt)</label>
+                            <input
+                                type="date"
+                                value={formData.originalExpiryDate}
+                                onChange={e => setFormData({ ...formData, originalExpiryDate: e.target.value })}
                             />
                         </div>
                         <div>

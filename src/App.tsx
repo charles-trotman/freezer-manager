@@ -26,6 +26,7 @@ function App() {
     }
   };
 
+
   const handleSubmit = (itemData: NewFreezerItem) => {
     if (editingItem) {
       updateItem(editingItem.id, itemData);

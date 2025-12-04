@@ -1,10 +1,18 @@
 export interface FreezerItem {
     id: string;
     name: string;
-    frozenDate: string; // ISO date string YYYY-MM-DD
-    useByDate: string; // ISO date string YYYY-MM-DD
+    frozenDate: string;
+    originalExpiryDate?: string;
+    useByDate?: string;
     category: string;
     notes?: string;
 }
 
-export type NewFreezerItem = Omit<FreezerItem, 'id'>;
+export interface NewFreezerItem {
+    name: string;
+    frozenDate: string;
+    originalExpiryDate?: string;
+    useByDate?: string;
+    category: string;
+    notes?: string;
+}

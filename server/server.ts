@@ -30,16 +30,21 @@ app.get('/api/items', async (req, res) => {
 // POST /api/items - Add new item
 app.post('/api/items', async (req, res) => {
     try {
-        const newItemData: NewFreezerItem = req.body;
+        const { name, frozenDate, category } = req.body;
 
         // Validate required fields
-        if (!newItemData.name || !newItemData.frozenDate) {
-            return res.status(400).json({ error: 'Missing required fields' });
+        if (!name || !frozenDate || !category) {
+            return res.status(400).json({ error: 'Name, frozenDate, and category are required' });
         }
 
         const item: FreezerItem = {
-            ...newItemData,
             id: randomUUID(),
+            name,
+            frozenDate,
+            originalExpiryDate: req.body.originalExpiryDate,
+            useByDate: req.body.useByDate,
+            category,
+            notes: req.body.notes
         };
 
         const savedItem = await addItem(item);
