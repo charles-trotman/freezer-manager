@@ -21,6 +21,9 @@ RUN apk add --no-cache nginx supervisor
 COPY package.json package-lock.json ./
 RUN npm ci --only=production
 
+# Install tsx globally to avoid npx permission issues
+RUN npm install -g tsx
+
 # Copy server files
 COPY server ./server
 COPY src/types.ts ./src/types.ts
@@ -51,7 +54,8 @@ RUN echo '[supervisord]' > /etc/supervisor.d/supervisord.ini && \
     echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor.d/supervisord.ini && \
     echo '' >> /etc/supervisor.d/supervisord.ini && \
     echo '[program:backend]' >> /etc/supervisor.d/supervisord.ini && \
-    echo 'command=npx tsx server/server.ts' >> /etc/supervisor.d/supervisord.ini && \
+    echo 'command=/usr/local/bin/tsx server/server.ts' >> /etc/supervisor.d/supervisord.ini && \
+    echo 'directory=/app' >> /etc/supervisor.d/supervisord.ini && \
     echo 'autostart=true' >> /etc/supervisor.d/supervisord.ini && \
     echo 'autorestart=true' >> /etc/supervisor.d/supervisord.ini && \
     echo 'stdout_logfile=/dev/stdout' >> /etc/supervisor.d/supervisord.ini && \
