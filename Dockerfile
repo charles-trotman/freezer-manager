@@ -36,6 +36,11 @@ COPY nginx.conf /etc/nginx/http.d/default.conf
 # Create data directory
 RUN mkdir -p /app/data
 
+# Fix nginx permissions for Alpine
+RUN adduser -D -H -u 1000 -s /sbin/nologin nginx || true && \
+    chown -R nginx:nginx /var/lib/nginx && \
+    chown -R nginx:nginx /var/log/nginx
+
 # Create supervisor config to run both nginx and node
 RUN mkdir -p /etc/supervisor.d
 RUN echo '[supervisord]' > /etc/supervisor.d/supervisord.ini && \
@@ -44,6 +49,7 @@ RUN echo '[supervisord]' > /etc/supervisor.d/supervisord.ini && \
     echo '' >> /etc/supervisor.d/supervisord.ini && \
     echo '[program:nginx]' >> /etc/supervisor.d/supervisord.ini && \
     echo 'command=nginx -g "daemon off;"' >> /etc/supervisor.d/supervisord.ini && \
+    echo 'user=nginx' >> /etc/supervisor.d/supervisord.ini && \
     echo 'autostart=true' >> /etc/supervisor.d/supervisord.ini && \
     echo 'autorestart=true' >> /etc/supervisor.d/supervisord.ini && \
     echo 'stdout_logfile=/dev/stdout' >> /etc/supervisor.d/supervisord.ini && \
